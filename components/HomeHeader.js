@@ -1,5 +1,5 @@
-import { View, Text, Platform } from 'react-native'
-import React from 'react'
+import { Pressable, View, Text, Platform } from 'react-native'
+import React, { useState } from 'react'
 import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -13,6 +13,8 @@ import {
   } from 'react-native-popup-menu';
 import { MenuItem } from './CustomMenuItems';
 import { AntDesign, Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { twMerge } from 'tailwind-merge';
 
 const ios = Platform.OS=='ios';
 export default function HomeHeader() {
@@ -26,6 +28,25 @@ export default function HomeHeader() {
     const handleLogout = async ()=>{
         await logout();
     }
+
+    const [image, setImage] = useState<string | null>(null);
+
+    const pickImage = async () => {
+        
+        let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+        });
+
+        console.log(result);
+
+        if (!result.canceled && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+        }
+    };
+
   return (
     <View style={{paddingTop: ios? top:top+10 }} className="flex-row justify-between px-5 bg-indigo-400 pb-6 rounded-b-3xl shadow">
       <View>
@@ -39,12 +60,23 @@ export default function HomeHeader() {
                     // trigger wrapper styles
                 }
             }}>
-                <Image
-                    style={{height: hp(4.3), aspectRatio: 1, borderRadius: 100}}
-                    source={user?.profileUrl}
-                    placeholder={blurhash}
-                    transition={500}
-                />
+                <Pressable
+                    onPress={pickImage}
+                    className ={twMerge(
+                        "bg-green-600 px-6 py-3 rounded-2xl mb-6",
+                        "active:bg-green-700"
+                    )}
+                > 
+                    <Text className="text-white text-lg font-semibold">Mudar imagem</Text>
+                    {imageUri && (
+                       <Image
+                            style={{height: hp(4.3), aspectRatio: 1, borderRadius: 100}}
+                            source={{uri: imageUri}}
+                            placeholder={blurhash}
+                            transition={500}
+                        /> 
+                    )}
+                </Pressable>
             </MenuTrigger>
             <MenuOptions
                 customStyles={{
@@ -61,11 +93,12 @@ export default function HomeHeader() {
                 }}
             >
                 <MenuItem
-                    text="Profile"
                     action={handleProfile}
+                    text="Profile"
                     value={null}
-                    icon={<Feather name="user" size={hp(2.5)} color="#737373" /> }
+                    icon={<Feather name="user" size={hp(2.5)} color="#737373" /> } 
                 />
+                
                 <Divider />
                 <MenuItem
                     text="Sign Out"
